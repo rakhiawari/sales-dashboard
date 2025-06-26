@@ -1,0 +1,150 @@
+<div class="product-table">
+  <div class="table-header">
+    <div class="header-left">
+      <h3 class="table-title">Top selling products</h3>
+      <span class="table-subtitle">{{ products().length }} products</span>
+    </div>
+    
+    <div class="header-actions">
+      <!-- Category Filter -->
+      <select 
+        class="category-filter"
+        [value]="dataService.selectedCategory()"
+        (change)="onCategoryChange($event)">
+        <option value="all">All Categories</option>
+        <option value="tops">Men's Tops</option>
+        <option value="shoes">Men's Shoes</option>
+        <option value="t-shirt">T-Shirts</option>
+      </select>
+
+      <!-- Export Button -->
+      <button class="export-btn" (click)="exportData()" [disabled]="isExporting()">
+        @if (isExporting()) {
+          <i class="loading-icon">⏳</i>
+        } @else {
+          <i class="export-icon">📊</i>
+        }
+        Export
+      </button>
+
+      <!-- Add Product Button -->
+      <button class="add-btn" (click)="addProduct()">
+        <i class="add-icon">➕</i>
+        Add Product
+      </button>
+    </div>
+  </div>
+  
+  <div class="table-container">
+    <table class="products-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>
+            <button class="sort-btn" (click)="sort('name')">
+              Product Name
+              <i class="sort-icon">{{ getSortIcon('name') }}</i>
+            </button>
+          </th>
+          <th>Category</th>
+          <th>
+            <button class="sort-btn" (click)="sort('stock')">
+              Stock
+              <i class="sort-icon">{{ getSortIcon('stock') }}</i>
+            </button>
+          </th>
+          <th>
+            <button class="sort-btn" (click)="sort('price')">
+              Price
+              <i class="sort-icon">{{ getSortIcon('price') }}</i>
+            </button>
+          </th>
+          <th>
+            <button class="sort-btn" (click)="sort('sales')">
+              Total Sales
+              <i class="sort-icon">{{ getSortIcon('sales') }}</i>
+            </button>
+          </th>
+          <th>Rating</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of products(); track product.id; let i = $index) {
+          <tr class="product-row" [class.editing]="editingProduct() === product.id">
+            <td>
+              <img [src]="product.image" [alt]="product.name" class="product-image">
+            </td>
+            <td class="product-name">
+              @if (editingProduct() === product.id) {
+                <input 
+                  type="text" 
+                  [value]="product.name"
+                  (blur)="saveEdit(product.id, 'name', $event)"
+                  class="edit-input">
+              } @else {
+                {{ product.name }}
+              }
+            </td>
+            <td class="product-category">{{ product.category }}</td>
+            <td>
+              <span class="stock-status" [ngClass]="product.stockStatus">
+                {{ product.stock }}
+              </span>
+              <span class="stock-count">({{ product.stockCount }})</span>
+            </td>
+            <td class="product-price">\${{ product.price }}</td>
+            <td class="total-sales">{{ product.totalSales }}</td>
+            <td class="product-rating">
+              <div class="rating-stars">
+                @for (star of getStars(product.rating); track $index) {
+                  <span [class]="star">{{ star === 'full' ? '★' : '☆' }}</span>
+                }
+                <span class="rating-number">({{ product.rating }})</span>
+              </div>
+            </td>
+            <td class="product-actions">
+              <button 
+                class="action-btn edit-btn" 
+                (click)="editProduct(product.id)"
+                [disabled]="editingProduct() === product.id">
+                <i>✏️</i>
+              </button>
+              <button 
+                class="action-btn view-btn" 
+                (click)="viewProduct(product.id)">
+                <i>👁️</i>
+              </button>
+              <button 
+                class="action-btn delete-btn" 
+                (click)="deleteProduct(product.id)">
+                <i>🗑️</i>
+              </button>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr>
+            <td colspan="8" class="empty-state">
+              <div class="empty-content">
+                <i class="empty-icon">📦</i>
+                <h3>No products found</h3>
+                <p>Try adjusting your search or filter criteria</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Loading Overlay -->
+  @if (dataService.isLoading()) {
+    <div class="loading-overlay">
+      <div class="loading-spinner">
+        <i class="spinner">⏳</i>
+        <span>Loading...</span>
+      </div>
+    </div>
+  }
+</div>

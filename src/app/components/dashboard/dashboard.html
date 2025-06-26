@@ -1,0 +1,85 @@
+<div class="dashboard">
+  <div class="dashboard-content">
+    <!-- Quick Actions Bar -->
+    <div class="quick-actions">
+      <button class="quick-action-btn primary" (click)="addOrder()">
+        <i>🛒</i>
+        <span>New Order</span>
+      </button>
+      <button class="quick-action-btn secondary" (click)="addCustomer()">
+        <i>👤</i>
+        <span>Add Customer</span>
+      </button>
+      <button class="quick-action-btn secondary" (click)="generateReport()">
+        <i>📊</i>
+        <span>Generate Report</span>
+      </button>
+      <button class="quick-action-btn secondary" (click)="refreshData()" [disabled]="isRefreshing()">
+        <i [class.spinning]="isRefreshing()">🔄</i>
+        <span>{{ isRefreshing() ? 'Refreshing...' : 'Refresh Data' }}</span>
+      </button>
+    </div>
+
+    <!-- Metrics Cards with Animation -->
+    <div class="metrics-row">
+      <app-metrics-card 
+        title="Total Customer" 
+        [value]="metrics().totalCustomers"
+        [change]="formatChange(metrics().customerChange)" 
+        [changeType]="metrics().customerChange >= 0 ? 'positive' : 'negative'"
+        period="This month" 
+        [clickable]="true"
+        (cardClick)="onMetricClick('customers')" />
+      
+      <app-metrics-card 
+        title="Total Revenue" 
+        [value]="metrics().totalRevenue"
+        [change]="formatChange(metrics().revenueChange)" 
+        [changeType]="metrics().revenueChange >= 0 ? 'positive' : 'negative'"
+        period="This month"
+        [clickable]="true"
+        (cardClick)="onMetricClick('revenue')" />
+      
+      <app-metrics-card 
+        title="Total Orders" 
+        [value]="metrics().totalOrders"
+        [change]="formatChange(metrics().ordersChange)" 
+        [changeType]="metrics().ordersChange >= 0 ? 'positive' : 'negative'"
+        period="This month"
+        [clickable]="true"
+        (cardClick)="onMetricClick('orders')" />
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-row">
+      <!-- Earnings Chart Section -->
+      <div class="chart-section">
+        <app-earnings-chart />
+      </div>
+
+      <!-- Sidebar Components -->
+      <div class="sidebar-section">
+        <app-country-list />
+        <app-customer-list />
+        <app-recent-orders />
+      </div>
+    </div>
+
+    <!-- Products Table Section -->
+    <div class="products-section">
+      <app-product-table />
+    </div>
+
+    <!-- Real-time Updates Banner -->
+    @if (hasUpdates()) {
+      <div class="updates-banner">
+        <div class="banner-content">
+          <i class="update-icon">🔔</i>
+          <span>{{ updateCount() }} new updates available</span>
+          <button class="update-btn" (click)="applyUpdates()">Apply Updates</button>
+          <button class="dismiss-btn" (click)="dismissUpdates()">×</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

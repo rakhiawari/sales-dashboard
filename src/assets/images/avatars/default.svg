@@ -1,0 +1,6 @@
+<!-- Create as default.svg instead -->
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
+  <circle cx="75" cy="75" r="75" fill="#e5e7eb"/>
+  <circle cx="75" cy="60" r="25" fill="#9ca3af"/>
+  <path d="M75 85 C60 85 50 95 40 110 L40 150 L110 150 L110 110 C100 95 90 85 75 85 Z" fill="#9ca3af"/>
+</svg>

@@ -1,0 +1,171 @@
+<div class="chat-page">
+    <!-- Chat Sidebar -->
+    <div class="chat-sidebar">
+      <div class="chat-header">
+        <h2>Messages</h2>
+        <button class="new-chat-btn" (click)="startNewChat()">➕</button>
+      </div>
+
+      <div class="search-container">
+        <input 
+          type="text" 
+          placeholder="Search conversations..."
+          [(ngModel)]="searchQuery"
+          (input)="filterContacts()"
+          class="search-input">
+      </div>
+
+      <div class="contacts-list">
+        @for (contact of filteredContacts(); track contact.id) {
+          <div 
+            class="contact-item" 
+            [class.active]="selectedContact()?.id === contact.id"
+            (click)="selectContact(contact)">
+            <div class="contact-avatar">
+              <img [src]="contact.avatar" [alt]="contact.name">
+              <span class="status-indicator" [class]="contact.status"></span>
+            </div>
+            <div class="contact-info">
+              <div class="contact-name">{{ contact.name }}</div>
+              <div class="last-message">{{ contact.lastMessage || 'No messages yet' }}</div>
+            </div>
+            <div class="contact-meta">
+              @if (contact.lastMessageTime) {
+                <div class="message-time">{{ formatTime(contact.lastMessageTime) }}</div>
+              }
+              @if (contact.unreadCount > 0) {
+                <span class="unread-badge">{{ contact.unreadCount }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Chat Main Area -->
+    <div class="chat-main">
+      @if (selectedContact()) {
+        <!-- Chat Header -->
+        <div class="chat-main-header">
+          <div class="contact-info">
+            <img [src]="selectedContact()!.avatar" [alt]="selectedContact()!.name" class="contact-avatar">
+            <div class="contact-details">
+              <h3>{{ selectedContact()!.name }}</h3>
+              <span class="contact-status">{{ selectedContact()!.status }}</span>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="action-btn" (click)="initiateCall()">📞</button>
+            <button class="action-btn" (click)="initiateVideoCall()">📹</button>
+            <button class="action-btn" (click)="showContactInfo()">ℹ️</button>
+          </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="messages-container" #messagesContainer>
+          @for (message of currentMessages(); track message.id) {
+            <div 
+              class="message" 
+              [class]="message.senderId === currentUserId ? 'sent' : 'received'">
+              @if (message.senderId !== currentUserId) {
+                <img [src]="getMessageSenderAvatar(message)" [alt]="message.senderName" class="message-avatar">
+              }
+              <div class="message-content">
+                @if (message.type === 'text') {
+                  <div class="message-text">{{ message.content }}</div>
+                }
+                @if (message.type === 'image') {
+                  <img [src]="message.content" class="message-image" (click)="viewImage(message.content)">
+                }
+                @if (message.type === 'file') {
+                  <div class="message-file">
+                    <i class="file-icon">📎</i>
+                    <span>{{ message.content }}</span>
+                    <button class="download-btn">⬇️</button>
+                  </div>
+                }
+                <div class="message-time">{{ formatMessageTime(message.timestamp) }}</div>
+              </div>
+            </div>
+          }
+          
+          @if (isTyping()) {
+            <div class="typing-indicator">
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span class="typing-text">{{ selectedContact()!.name }} is typing...</span>
+            </div>
+          }
+        </div>
+
+        <!-- Message Input -->
+        <div class="message-input-container">
+          <div class="input-actions">
+            <button class="attachment-btn" (click)="showAttachmentOptions()">📎</button>
+            <button class="emoji-btn" (click)="showEmojiPicker()">😊</button>
+          </div>
+          
+          <div class="message-input">
+            <textarea 
+              [(ngModel)]="newMessage"
+              (keydown)="onKeyDown($event)"
+              (input)="onTyping()"
+              placeholder="Type a message..."
+              class="message-textarea"
+              #messageInput></textarea>
+          </div>
+          
+          <button 
+            class="send-btn" 
+            [disabled]="!newMessage.trim()"
+            (click)="sendMessage()">
+            @if (isSending()) {
+              <i class="loading-spinner">⏳</i>
+            } @else {
+              ➤
+            }
+          </button>
+        </div>
+      } @else {
+        <!-- No Chat Selected -->
+        <div class="no-chat-selected">
+          <div class="no-chat-content">
+            <i class="no-chat-icon">💬</i>
+            <h3>Select a conversation</h3>
+            <p>Choose from your existing conversations or start a new one</p>
+            <button class="start-chat-btn" (click)="startNewChat()">Start New Chat</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Attachment Options Modal -->
+  @if (showAttachments()) {
+    <div class="modal-overlay" (click)="closeAttachmentOptions()">
+      <div class="attachment-modal" (click)="$event.stopPropagation()">
+        <h3>Send Attachment</h3>
+        <div class="attachment-options">
+          <button class="attachment-option" (click)="selectFile('image')">
+            <i>🖼️</i>
+            <span>Photo</span>
+          </button>
+          <button class="attachment-option" (click)="selectFile('document')">
+            <i>📄</i>
+            <span>Document</span>
+          </button>
+          <button class="attachment-option" (click)="selectFile('video')">
+            <i>🎥</i>
+            <span>Video</span>
+          </button>
+          <button class="attachment-option" (click)="selectLocation()">
+            <i>📍</i>
+            <span>Location</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }

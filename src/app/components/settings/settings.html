@@ -1,0 +1,284 @@
+<div class="settings-page">
+    <div class="settings-header">
+      <h1>Settings</h1>
+      <p>Manage your account and application preferences</p>
+    </div>
+
+    <div class="settings-layout">
+      <!-- Settings Navigation -->
+      <div class="settings-nav">
+        @for (section of settingsSections; track section.id) {
+          <button 
+            class="nav-item" 
+            [class.active]="activeSection() === section.id"
+            (click)="setActiveSection(section.id)">
+            <i class="nav-icon">{{ section.icon }}</i>
+            <div class="nav-content">
+              <span class="nav-title">{{ section.title }}</span>
+              <span class="nav-description">{{ section.description }}</span>
+            </div>
+          </button>
+        }
+      </div>
+
+      <!-- Settings Content -->
+      <div class="settings-content">
+        @switch (activeSection()) {
+          @case ('profile') {
+            <div class="settings-section">
+              <h2>Profile Settings</h2>
+              <div class="form-group">
+                <label>Profile Picture</label>
+                <div class="profile-picture-upload">
+                  <img [src]="profilePicture()" alt="Profile" class="current-picture">
+                  <button class="upload-btn" (click)="uploadProfilePicture()">
+                    Change Picture
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>First Name</label>
+                  <input type="text" [(ngModel)]="firstName" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Last Name</label>
+                  <input type="text" [(ngModel)]="lastName" class="form-input">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="email" class="form-input">
+              </div>
+              
+              <div class="form-group">
+                <label>Bio</label>
+                <textarea [(ngModel)]="bio" class="form-textarea" rows="4"></textarea>
+              </div>
+              
+              <button class="save-btn" (click)="saveProfile()">Save Changes</button>
+            </div>
+          }
+
+          @case ('notifications') {
+            <div class="settings-section">
+              <h2>Notification Preferences</h2>
+              <p>Choose how you want to be notified about important events</p>
+              
+              @for (notification of notificationSettings(); track notification.id) {
+                <div class="notification-item">
+                  <div class="notification-info">
+                    <h3>{{ notification.title }}</h3>
+                    <p>{{ notification.description }}</p>
+                  </div>
+                  
+                  <div class="notification-controls">
+                    <label class="toggle-switch">
+                      <input 
+                        type="checkbox" 
+                        [(ngModel)]="notification.enabled"
+                        (change)="updateNotificationSetting(notification.id, 'enabled', $event)">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    
+                    @if (notification.enabled) {
+                      <div class="notification-methods">
+                        <label class="method-checkbox">
+                          <input 
+                            type="checkbox" 
+                            [(ngModel)]="notification.email"
+                            (change)="updateNotificationSetting(notification.id, 'email', $event)">
+                          <span>📧 Email</span>
+                        </label>
+                        
+                        <label class="method-checkbox">
+                          <input 
+                            type="checkbox" 
+                            [(ngModel)]="notification.push"
+                            (change)="updateNotificationSetting(notification.id, 'push', $event)">
+                          <span>🔔 Push</span>
+                        </label>
+                        
+                        <label class="method-checkbox">
+                          <input 
+                            type="checkbox" 
+                            [(ngModel)]="notification.sms"
+                            (change)="updateNotificationSetting(notification.id, 'sms', $event)">
+                          <span>📱 SMS</span>
+                        </label>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+              
+              <button class="save-btn" (click)="saveNotificationSettings()">
+                Save Notification Settings
+              </button>
+            </div>
+          }
+
+          @case ('security') {
+            <div class="settings-section">
+              <h2>Security Settings</h2>
+              
+              <div class="security-card">
+                <h3>Change Password</h3>
+                <div class="form-group">
+                  <label>Current Password</label>
+                  <input type="password" [(ngModel)]="currentPassword" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>New Password</label>
+                  <input type="password" [(ngModel)]="newPassword" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Confirm New Password</label>
+                  <input type="password" [(ngModel)]="confirmPassword" class="form-input">
+                </div>
+                <button class="save-btn" (click)="changePassword()">Change Password</button>
+              </div>
+              
+              <div class="security-card">
+                <h3>Two-Factor Authentication</h3>
+                <p>Add an extra layer of security to your account</p>
+                <div class="two-factor-status">
+                  <span class="status-indicator" [class]="twoFactorEnabled() ? 'enabled' : 'disabled'">
+                    {{ twoFactorEnabled() ? '✅ Enabled' : '❌ Disabled' }}
+                  </span>
+                  <button 
+                    class="toggle-btn" 
+                    (click)="toggleTwoFactor()">
+                    {{ twoFactorEnabled() ? 'Disable' : 'Enable' }} 2FA
+                  </button>
+                </div>
+              </div>
+              
+              <div class="security-card">
+                <h3>Login Sessions</h3>
+                <p>Manage your active login sessions</p>
+                <div class="sessions-list">
+                  @for (session of activeSessions(); track session.id) {
+                    <div class="session-item">
+                      <div class="session-info">
+                        <span class="session-device">{{ session.device }}</span>
+                        <span class="session-location">{{ session.location }}</span>
+                        <span class="session-time">{{ session.lastActive }}</span>
+                      </div>
+                      @if (!session.current) {
+                        <button class="terminate-btn" (click)="terminateSession(session.id)">
+                          Terminate
+                        </button>
+                      } @else {
+                        <span class="current-session">Current Session</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          @case ('billing') {
+            <div class="settings-section">
+              <h2>Billing & Subscription</h2>
+              
+              <div class="current-plan">
+                <h3>Current Plan</h3>
+                <div class="plan-card">
+                  <div class="plan-info">
+                    <h4>{{ currentPlan().name }}</h4>
+                    <p>{{ currentPlan().description }}</p>
+                    <div class="plan-price">
+                      <span class="price">${{ currentPlan().price }}</span>
+                      <span class="period">/{{ currentPlan().period }}</span>
+                    </div>
+                  </div>
+                  <button class="upgrade-btn" (click)="upgradePlan()">
+                    Upgrade Plan
+                  </button>
+                </div>
+              </div>
+              
+              <div class="billing-history">
+                <h3>Billing History</h3>
+                <div class="invoices-list">
+                  @for (invoice of billingHistory(); track invoice.id) {
+                    <div class="invoice-item">
+                      <span class="invoice-date">{{ invoice.date }}</span>
+                      <span class="invoice-amount">${{ invoice.amount }}</span>
+                      <span class="invoice-status" [class]="invoice.status">{{ invoice.status }}</span>
+                      <button class="download-btn" (click)="downloadInvoice(invoice.id)">
+                        📄 Download
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          @case ('preferences') {
+            <div class="settings-section">
+              <h2>Application Preferences</h2>
+              
+              <div class="preference-group">
+                <h3>Appearance</h3>
+                <div class="preference-item">
+                  <label>Theme</label>
+                  <select [(ngModel)]="selectedTheme" (ngModelChange)="changeTheme($event)">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="auto">Auto (System)</option>
+                  </select>
+                </div>
+                
+                <div class="preference-item">
+                  <label>Language</label>
+                  <select [(ngModel)]="selectedLanguage" (ngModelChange)="changeLanguage($event)">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="preference-group">
+                <h3>Dashboard</h3>
+                <div class="preference-item">
+                  <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="showWelcomeMessage">
+                    <span>Show welcome message on dashboard</span>
+                  </label>
+                </div>
+                
+                <div class="preference-item">
+                  <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="autoRefreshData">
+                    <span>Auto-refresh dashboard data</span>
+                  </label>
+                </div>
+                
+                <div class="preference-item">
+                  <label>Refresh Interval</label>
+                  <select [(ngModel)]="refreshInterval" [disabled]="!autoRefreshData">
+                    <option value="30">30 seconds</option>
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                    <option value="600">10 minutes</option>
+                  </select>
+                </div>
+              </div>
+              
+              <button class="save-btn" (click)="savePreferences()">
+                Save Preferences
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>

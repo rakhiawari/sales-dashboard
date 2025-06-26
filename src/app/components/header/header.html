@@ -1,0 +1,102 @@
+<header class="header">
+  <div class="header-content">
+    <div class="welcome-section">
+      <h1 class="welcome-title">Welcome Back, Zac!</h1>
+      <p class="welcome-subtitle">Here's what happening with your store today</p>
+    </div>
+    
+    <div class="header-actions">
+      <!-- Search -->
+      <div class="search-container" [class.active]="showSearch()">
+        <button class="search-btn" (click)="toggleSearch()">
+          <i class="search-icon">🔍</i>
+        </button>
+        @if (showSearch()) {
+          <input 
+            #searchInput
+            type="text" 
+            class="search-input"
+            placeholder="Search products, customers..."
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+            (blur)="hideSearch()"
+            (keydown.escape)="hideSearch()">
+        }
+      </div>
+
+      <!-- Notifications -->
+      <div class="notifications-container">
+        <button class="notifications-btn" (click)="toggleNotifications()">
+          <i class="notification-icon">🔔</i>
+          @if (unreadCount() > 0) {
+            <span class="notification-badge">{{ unreadCount() }}</span>
+          }
+        </button>
+        
+        @if (showNotifications()) {
+          <div class="notifications-dropdown">
+            <div class="notifications-header">
+              <h3>Notifications</h3>
+              @if (unreadCount() > 0) {
+                <button class="mark-all-read" (click)="markAllAsRead()">
+                  Mark all as read
+                </button>
+              }
+            </div>
+            
+            <div class="notifications-list">
+              @for (notification of notifications(); track notification.id) {
+                <div 
+                  class="notification-item" 
+                  [class.unread]="!notification.read"
+                  [class]="'notification-' + notification.type"
+                  (click)="markAsRead(notification.id)">
+                  <div class="notification-content">
+                    <h4>{{ notification.title }}</h4>
+                    <p>{{ notification.message }}</p>
+                    <span class="notification-time">
+                      {{ formatTime(notification.timestamp) }}
+                    </span>
+                  </div>
+                </div>
+              }
+              @empty {
+                <div class="no-notifications">
+                  <p>No notifications</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Theme Toggle -->
+      <app-theme-toggle />
+      
+      <!-- User Profile -->
+      <div class="user-profile" (click)="toggleUserMenu()">
+        <img src="assets/images/avatars/user-avatar.svg" alt="Zac Hudson" class="avatar">
+        <span class="username">Zac Hudson</span>
+        <i class="dropdown-icon">▼</i>
+        
+        @if (showUserMenu()) {
+          <div class="user-dropdown">
+            <a href="#" class="dropdown-item">
+              <i>👤</i> Profile
+            </a>
+            <a href="#" class="dropdown-item">
+              <i>⚙️</i> Settings
+            </a>
+            <a href="#" class="dropdown-item">
+              <i>❓</i> Help
+            </a>
+            <hr class="dropdown-divider">
+            <a href="#" class="dropdown-item">
+              <i>🚪</i> Logout
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>

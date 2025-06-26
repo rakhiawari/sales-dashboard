@@ -1,0 +1,10 @@
+<button 
+      class="theme-toggle" 
+      (click)="toggleTheme()" 
+      [attr.aria-label]="themeService.isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+      <div class="toggle-track" [class.dark]="themeService.isDarkMode()">
+        <div class="toggle-thumb" [class.dark]="themeService.isDarkMode()">
+          <span class="toggle-icon">{{ themeService.isDarkMode() ? '🌙' : '☀️' }}</span>
+        </div>
+      </div>
+    </button>

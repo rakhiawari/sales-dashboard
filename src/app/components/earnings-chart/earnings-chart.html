@@ -1,0 +1,79 @@
+<div class="earnings-chart">
+  <div class="chart-header">
+    <div class="chart-title-section">
+      <h3 class="chart-title">Earnings</h3>
+      <div class="chart-controls">
+        <select class="time-period" [value]="selectedPeriod()" (change)="onPeriodChange($event)">
+          <option value="12months">Last 12 months</option>
+          <option value="6months">Last 6 months</option>
+          <option value="3months">Last 3 months</option>
+          <option value="1month">This month</option>
+        </select>
+        <button class="refresh-btn" (click)="refreshChart()" [disabled]="isRefreshing()">
+          <i class="refresh-icon" [class.spinning]="isRefreshing()">🔄</i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="chart-legend">
+      <div class="legend-item" (click)="toggleSeries('firstHalf')">
+        <span class="legend-dot first-half" [class.disabled]="!showFirstHalf()"></span>
+        <span class="legend-text">First half</span>
+        <span class="legend-toggle">{{ showFirstHalf() ? '👁️' : '🙈' }}</span>
+      </div>
+      <div class="legend-item" (click)="toggleSeries('topGross')">
+        <span class="legend-dot top-gross" [class.disabled]="!showTopGross()"></span>
+        <span class="legend-text">Top Gross</span>
+        <span class="legend-toggle">{{ showTopGross() ? '👁️' : '🙈' }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="chart-container" (mousemove)="onMouseMove($event)" (mouseleave)="hideTooltip()">
+    <canvas #chartCanvas width="600" height="300"></canvas>
+    
+    @if (showTooltip()) {
+      <div class="chart-tooltip" [ngStyle]="tooltipStyle()">
+        <div class="tooltip-content">
+          <div class="tooltip-month">{{ tooltipData().month }}</div>
+          <div class="tooltip-values">
+            @if (showFirstHalf()) {
+              <div class="tooltip-item first-half">
+                <span class="tooltip-label">First Half:</span>
+                <span class="tooltip-value">${{ tooltipData().firstHalf }}K</span>
+              </div>
+            }
+            @if (showTopGross()) {
+              <div class="tooltip-item top-gross">
+                <span class="tooltip-label">Top Gross:</span>
+                <span class="tooltip-value">${{ tooltipData().topGross }}K</span>
+              </div>
+            }
+            <div class="tooltip-item orders">
+              <span class="tooltip-label">Orders:</span>
+              <span class="tooltip-value">{{ tooltipData().orders }}</span>
+            </div>
+            <div class="tooltip-item customers">
+              <span class="tooltip-label">Customers:</span>
+              <span class="tooltip-value">{{ tooltipData().customers }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Chart Statistics -->
+    <div class="chart-stats">
+      <div class="stat-item">
+        <span class="stat-label">Peak Month:</span>
+        <span class="stat-value">{{ peakMonth() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Growth:</span>
+        <span class="stat-value" [class.positive]="growthRate() > 0" [class.negative]="growthRate() < 0">
+          {{ growthRate() > 0 ? '+' : '' }}{{ growthRate() }}%
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

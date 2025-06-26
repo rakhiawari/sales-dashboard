@@ -1,0 +1,123 @@
+.metrics-card {
+    background-color: var(--primary-bg);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--card-hover-shadow);
+    }
+    
+    &.clickable {
+      cursor: pointer;
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--card-hover-shadow);
+        
+        .card-overlay {
+          opacity: 1;
+        }
+      }
+      
+      &:active {
+        transform: translateY(-2px);
+      }
+    }
+  }
+  
+  .card-header {
+    margin-bottom: 16px;
+  }
+  
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  
+  .card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  
+  .value-section {
+    .main-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: block;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+  }
+  
+  .change-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .change-value {
+    font-size: 14px;
+    font-weight: 600;
+    
+    &.positive {
+      color: var(--success-color);
+    }
+    
+    &.negative {
+      color: var(--error-color);
+    }
+  }
+  
+  .change-period {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  
+  .chart-mini {
+    opacity: 0.6;
+    
+    .positive & {
+      color: var(--success-color);
+    }
+    
+    .negative & {
+      color: var(--error-color);
+    }
+  }
+  
+  .card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(16, 185, 129, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+    
+    .click-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    span {
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }

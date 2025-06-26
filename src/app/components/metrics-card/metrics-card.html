@@ -1,0 +1,35 @@
+<div 
+  class="metrics-card" 
+  [class]="cardClasses()"
+  (click)="onCardClick()">
+  <div class="card-header">
+    <h3 class="card-title">{{ title() }}</h3>
+  </div>
+  
+  <div class="card-content">
+    <div class="value-section">
+      <span class="main-value">{{ value() }}</span>
+      <div class="change-indicator">
+        <span class="change-value" [class]="'change-' + changeType()">{{ change() }}</span>
+        <span class="change-period">{{ period() }}</span>
+      </div>
+    </div>
+    
+    <div class="chart-mini" [class]="'chart-' + changeType()">
+      <svg width="80" height="40" viewBox="0 0 80 40">
+        <path d="M5,30 Q20,10 35,20 T65,15" 
+              stroke="currentColor" 
+              stroke-width="2" 
+              fill="none"
+              [attr.stroke]="strokeColor()"/>
+      </svg>
+    </div>
+  </div>
+  
+  @if (clickable()) {
+    <div class="card-overlay">
+      <i class="click-icon">👆</i>
+      <span>Click for details</span>
+    </div>
+  }
+</div>

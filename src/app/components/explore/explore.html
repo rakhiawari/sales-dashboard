@@ -1,0 +1,160 @@
+<div class="explore-page">
+    <!-- Hero Section -->
+    <div class="explore-hero">
+      <div class="hero-content">
+        <h1>Discover & Explore</h1>
+        <p>Find trending products, insights, and opportunities</p>
+        <div class="search-bar">
+          <input 
+            type="text" 
+            placeholder="What are you looking for?"
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            class="search-input">
+          <button class="search-btn btn btn-outline">🔍</button>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">{{ totalItems() }}</span>
+          <span class="stat-label">Total Items</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">{{ activeCategories() }}</span>
+          <span class="stat-label">Categories</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">{{ trendingCount() }}</span>
+          <span class="stat-label">Trending Now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <section class="categories-section">
+      <div class="section-header1 section-header flex justify-between items-center">
+        <h2>Browse Categories</h2>
+        <div class="view-options btn btn-outline">
+          <button 
+            class="view-btn btn btn-outline" 
+            [class.active]="categoryView() === 'grid'"
+            (click)="setCategoryView('grid')">
+            Grid
+          </button>
+          <button 
+            class="view-btn" 
+            [class.active]="categoryView() === 'list'"
+            (click)="setCategoryView('list')">
+            List
+          </button>
+        </div>
+      </div>
+
+      <div class="categories-grid" [class]="categoryView()">
+        @for (category of filteredCategories(); track category.id) {
+          <div 
+            class="category-card" 
+            (click)="exploreCategory(category)"
+            [class.trending]="category.trending">
+            @if (category.trending) {
+              <span class="trending-badge">🔥 Trending</span>
+            }
+            <div class="category-icon">{{ category.icon }}</div>
+            <h3 class="category-name">{{ category.name }}</h3>
+            <p class="category-description">{{ category.description }}</p>
+            <div class="category-stats">
+              <span class="item-count">{{ category.itemCount }} items</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Trending Section -->
+    <section class="trending-section">
+      <div class="section-header1 section-header flex justify-between items-center">
+        <h2>Trending Now</h2>
+        <div class="trending-filters">
+          <button 
+            class="filter-btn btn btn-outline" 
+            [class.active]="trendingFilter() === 'all'"
+            (click)="setTrendingFilter('all')">
+            All
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="trendingFilter() === 'today'"
+            (click)="setTrendingFilter('today')">
+            Today
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="trendingFilter() === 'week'"
+            (click)="setTrendingFilter('week')">
+            This Week
+          </button>
+          <button 
+            class="filter-btn" 
+            [class.active]="trendingFilter() === 'month'"
+            (click)="setTrendingFilter('month')">
+            This Month
+          </button>
+        </div>
+      </div>
+
+      <div class="trending-grid">
+        @for (item of filteredTrendingItems(); track item.id; let i = $index) {
+          <div 
+            class="trending-item" 
+            [class]="'rank-' + (i + 1)"
+            (click)="viewTrendingItem(item)">
+            <div class="rank-badge">#{{ i + 1 }}</div>
+            <img [src]="item.image" [alt]="item.title" class="item-image">
+            <div class="item-content">
+              <span class="item-category">{{ item.category }}</span>
+              <h3 class="item-title">{{ item.title }}</h3>
+              <p class="item-description">{{ item.description }}</p>
+              <div class="item-meta">
+                <span class="item-author">by {{ item.author }}</span>
+                <span class="item-date">{{ formatDate(item.publishedDate) }}</span>
+              </div>
+              <div class="item-stats">
+                <span class="views">👁️ {{ formatNumber(item.views) }}</span>
+                <span class="likes">❤️ {{ formatNumber(item.likes) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="actions-grid">
+        <button class="action-card" (click)="createNew()">
+          <i class="action-icon">➕</i>
+          <h3>Create New</h3>
+          <p>Start something fresh</p>
+        </button>
+        
+        <button class="action-card" (click)="viewAnalytics()">
+          <i class="action-icon">📊</i>
+          <h3>View Analytics</h3>
+          <p>See performance data</p>
+        </button>
+        
+        <button class="action-card" (click)="importData()">
+          <i class="action-icon">📤</i>
+          <h3>Import Data</h3>
+          <p>Bring in external data</p>
+        </button>
+        
+        <button class="action-card" (click)="exportReport()">
+          <i class="action-icon">📋</i>
+          <h3>Export Report</h3>
+          <p>Generate detailed reports</p>
+        </button>
+      </div>
+    </section>
+  </div>

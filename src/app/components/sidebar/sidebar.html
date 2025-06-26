@@ -1,0 +1,42 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <span class="logo-icon">❖</span>
+      <span class="logo-text">Xenith</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      @for (item of navItems; track item.route) {
+        <li class="nav-item" [class.active]="item.active">
+          <a [routerLink]="item.route" class="nav-link">
+            <i class="nav-icon">{{ item.icon }}</i>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+
+    <div class="tools-section">
+      <h4 class="section-title">Tools</h4>
+      <ul class="nav-list">
+        @for (tool of toolItems; track tool.route) {
+          <li class="nav-item">
+            <a [routerLink]="tool.route" class="nav-link">
+              <i class="nav-icon">{{ tool.icon }}</i>
+              <span>{{ tool.label }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="#" class="logout-link">
+      <i class="nav-icon">🚪</i>
+      <span>Log out</span>
+    </a>
+  </div>
+</div>

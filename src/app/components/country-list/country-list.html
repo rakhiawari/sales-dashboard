@@ -1,0 +1,37 @@
+<div class="country-list">
+  <div class="section-header">
+    <h3 class="section-title">Top Countries by Sales</h3>
+    <span class="section-subtitle">{{ countries().length }} countries • Since last week</span>
+  </div>
+  
+  <div class="countries-container">
+    @for (country of countries(); track country.id) {
+      <div class="country-item" (click)="onCountryClick(country)">
+        <div class="country-info">
+          <img 
+            [src]="country.flag" 
+            [alt]="country.name" 
+            class="country-flag"
+            (error)="onImageError($event)">
+          <div class="country-details">
+            <span class="country-name">{{ country.name }}</span>
+            <span class="country-change">
+              {{ country.changePercent > 0 ? '+' : '' }}{{ country.changePercent }}%
+            </span>
+          </div>
+        </div>
+        <div class="country-stats">
+          <span class="country-value">{{ country.value }}</span>
+          <i class="trend-icon" [ngClass]="country.trend">
+            {{ country.trend === 'up' ? '↗️' : '↘️' }}
+          </i>
+        </div>
+      </div>
+    }
+    @empty {
+      <div class="empty-state">
+        <p>No countries data available</p>
+      </div>
+    }
+  </div>
+</div>
