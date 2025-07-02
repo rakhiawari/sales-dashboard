@@ -1,0 +1,442 @@
+<div class="help-page">
+    <!-- Help Header -->
+    <div class="help-header">
+      <div class="help-header-content">
+        <div class="header-text">
+          <h1>Help Center</h1>
+          <p>Find answers, get support, and learn how to make the most of Xenith</p>
+        </div>
+        
+        <!-- Global Search -->
+        <div class="help-search">
+          <div class="search-input-wrapper">
+            <input 
+              type="text" 
+              placeholder="Search help articles..." 
+              class="search-input"
+              [value]="searchQuery()"
+              (input)="onSearch($event)"
+            >
+            <span class="search-icon">🔍</span>
+          </div>
+          <div *ngIf="searchResults().length > 0 && searchQuery()" class="search-results">
+            <div class="search-result-count">
+              Found {{ searchResults().length }} result(s)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Help Navigation -->
+    <nav class="help-nav">
+      <div class="nav-container">
+        <button 
+          class="nav-item"
+          [class.active]="activeView() === 'overview'"
+          (click)="setActiveView('overview')"
+        >
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Overview</span>
+        </button>
+        
+        <button 
+          class="nav-item"
+          [class.active]="activeView() === 'articles'"
+          (click)="setActiveView('articles')"
+        >
+          <span class="nav-icon">📚</span>
+          <span class="nav-label">Articles ({{ filteredArticles().length }})</span>
+        </button>
+        
+        <button 
+          class="nav-item"
+          [class.active]="activeView() === 'faq'"
+          (click)="setActiveView('faq')"
+        >
+          <span class="nav-icon">❓</span>
+          <span class="nav-label">FAQ ({{ filteredFAQs().length }})</span>
+        </button>
+        
+        <button 
+          class="nav-item"
+          [class.active]="activeView() === 'contact'"
+          (click)="setActiveView('contact')"
+        >
+          <span class="nav-icon">💬</span>
+          <span class="nav-label">Contact</span>
+        </button>
+      </div>
+    </nav>
+  
+    <!-- Help Content -->
+    <div class="help-content">
+      
+      <!-- Overview Section -->
+      <div *ngIf="activeView() === 'overview'" class="content-section overview-section">
+        
+        <!-- Search Results (if searching) -->
+        <div *ngIf="searchQuery() && searchResults().length > 0" class="search-results-section">
+          <h2>Search Results for "{{ searchQuery() }}"</h2>
+          <div class="search-results-list">
+            <div *ngFor="let result of searchResults()" class="search-result-item" (click)="openSearchResult(result)">
+              <div class="result-type">{{ result.type | titlecase }}</div>
+              <h3>{{ result.title }}</h3>
+              <p>{{ result.snippet }}</p>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Quick Actions (show when not searching) -->
+        <div *ngIf="!searchQuery()" class="quick-actions">
+          <h2>Quick Actions</h2>
+          <div class="actions-grid">
+            <button class="action-card primary" (click)="setActiveView('articles')">
+              <span class="action-icon">📚</span>
+              <h3>Browse Articles</h3>
+              <p>Find detailed guides and tutorials</p>
+            </button>
+            
+            <button class="action-card secondary" (click)="setActiveView('faq')">
+              <span class="action-icon">❓</span>
+              <h3>Common Questions</h3>
+              <p>Quick answers to frequent questions</p>
+            </button>
+            
+            <button class="action-card tertiary" (click)="openChat()">
+              <span class="action-icon">💬</span>
+              <h3>Live Chat</h3>
+              <p>Get instant help from our team</p>
+              <span class="status-indicator" [class.online]="chatStatus() === 'online'"></span>
+            </button>
+            
+            <button class="action-card quaternary" (click)="setActiveView('contact')">
+              <span class="action-icon">✉️</span>
+              <h3>Email Support</h3>
+              <p>Send us a detailed message</p>
+            </button>
+          </div>
+        </div>
+  
+        <!-- Help Categories (show when not searching) -->
+        <div *ngIf="!searchQuery()" class="categories-section">
+          <h2>Browse by Category</h2>
+          <div class="categories-grid">
+            <div 
+              *ngFor="let category of categories()" 
+              class="category-card"
+              (click)="selectCategory(category.id)"
+            >
+              <div class="category-header">
+                <span class="category-icon">{{ category.icon }}</span>
+                <h3>{{ category.title }}</h3>
+              </div>
+              <p class="category-description">{{ category.description }}</p>
+              <div class="category-meta">
+                <span class="article-count">{{ category.articleCount }} articles</span>
+                <span class="view-arrow">→</span>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Popular Articles (show when not searching) -->
+        <div *ngIf="!searchQuery()" class="popular-section">
+          <h2>Popular Articles</h2>
+          <div class="popular-articles">
+            <article 
+              *ngFor="let article of popularArticles()" 
+              class="article-preview"
+              (click)="openArticle(article)"
+            >
+              <h3>{{ article.title }}</h3>
+              <div class="article-meta">
+                <span class="view-count">👁️ {{ article.views }} views</span>
+                <span class="helpful-count">👍 {{ article.helpful }} helpful</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Articles Section -->
+      <div *ngIf="activeView() === 'articles'" class="content-section articles-section">
+        
+        <!-- Category Filter -->
+        <div class="section-header">
+          <div>
+            <h2>Help Articles</h2>
+            <p *ngIf="selectedCategory() !== 'all'">
+              Category: {{ getCategoryTitle(selectedCategory()) }}
+            </p>
+          </div>
+          <div class="filters">
+            <select 
+              class="category-filter"
+              [value]="selectedCategory()"
+              (change)="setSelectedCategory($any($event.target).value)"
+            >
+              <option value="all">All Categories</option>
+              <option *ngFor="let category of categories()" [value]="category.id">
+                {{ category.title }}
+              </option>
+            </select>
+            <button class="reset-filter" *ngIf="selectedCategory() !== 'all'" (click)="resetFilters()">
+              Clear Filter
+            </button>
+          </div>
+        </div>
+  
+        <!-- Articles List -->
+        <div class="articles-list">
+          <article 
+            *ngFor="let article of filteredArticles(); trackBy: trackByArticleId" 
+            class="article-card"
+            [class.expanded]="article.isExpanded"
+          >
+            <div class="article-content">
+              <h3 (click)="toggleArticle(article)">
+                {{ article.title }}
+                <span class="expand-toggle">{{ article.isExpanded ? '−' : '+' }}</span>
+              </h3>
+              
+              <div class="article-tags">
+                <span *ngFor="let tag of article.tags" class="tag" (click)="searchByTag(tag)">#{{ tag }}</span>
+              </div>
+              
+              <div *ngIf="article.isExpanded" class="article-body">
+                <p class="article-excerpt">{{ article.content }}</p>
+                
+                <div class="article-actions">
+                  <button 
+                    class="helpful-btn"
+                    [class.voted]="hasVoted(article.id)"
+                    (click)="markHelpful(article.id, 'article')"
+                    [disabled]="hasVoted(article.id)"
+                  >
+                    👍 {{ article.helpful }} {{ hasVoted(article.id) ? 'Thanks!' : 'Helpful?' }}
+                  </button>
+                  <button class="share-btn" (click)="shareArticle(article)">
+                    🔗 Share
+                  </button>
+                </div>
+              </div>
+              
+              <div class="article-footer">
+                <div class="article-meta">
+                  <span class="last-updated">Updated {{ formatDate(article.lastUpdated) }}</span>
+                  <span class="view-count">{{ article.views }} views</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          
+          <!-- No Results Message -->
+          <div *ngIf="filteredArticles().length === 0" class="no-results">
+            <span class="no-results-icon">🔍</span>
+            <h3>No articles found</h3>
+            <p>Try adjusting your search or filter criteria</p>
+            <button class="reset-btn" (click)="resetFilters()">Reset Filters</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- FAQ Section -->
+      <div *ngIf="activeView() === 'faq'" class="content-section faq-section">
+        <div class="section-header">
+          <h2>Frequently Asked Questions</h2>
+          <p>Quick answers to the most common questions</p>
+        </div>
+  
+        <div class="faq-list">
+          <div 
+            *ngFor="let faq of filteredFAQs(); trackBy: trackByFAQId" 
+            class="faq-item"
+            [class.expanded]="faq.isExpanded"
+          >
+            <button 
+              class="faq-question"
+              (click)="toggleFAQ(faq.id)"
+            >
+              <span class="question-text">{{ faq.question }}</span>
+              <span class="expand-icon" [class.rotated]="faq.isExpanded">▼</span>
+            </button>
+            
+            <div class="faq-answer" *ngIf="faq.isExpanded">
+              <p>{{ faq.answer }}</p>
+              <div class="faq-meta">
+                <button 
+                  class="helpful-btn"
+                  [class.voted]="hasVoted(faq.id)"
+                  (click)="markHelpful(faq.id, 'faq')"
+                  [disabled]="hasVoted(faq.id)"
+                >
+                  👍 {{ faq.helpful }} {{ hasVoted(faq.id) ? 'Thanks!' : 'found this helpful' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- No Results Message -->
+          <div *ngIf="filteredFAQs().length === 0" class="no-results">
+            <span class="no-results-icon">❓</span>
+            <h3>No FAQs found</h3>
+            <p>Try adjusting your search criteria</p>
+            <button class="reset-btn" (click)="clearSearch()">Clear Search</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Contact Section -->
+      <div *ngIf="activeView() === 'contact'" class="content-section contact-section">
+        <div class="section-header">
+          <h2>Get in Touch</h2>
+          <p>Can't find what you're looking for? We're here to help!</p>
+        </div>
+  
+        <div class="contact-options">
+          <div class="contact-card priority">
+            <div class="contact-header">
+              <span class="contact-icon">💬</span>
+              <h3>Live Chat</h3>
+              <span class="status-badge" [class]="chatStatus()">{{ chatStatus() | titlecase }}</span>
+            </div>
+            <p>Get instant help from our support team</p>
+            <div class="contact-details">
+              <p><strong>Response time:</strong> {{ chatStatus() === 'online' ? 'Usually within 5 minutes' : 'Currently offline' }}</p>
+              <p><strong>Available:</strong> Mon-Fri, 9 AM - 6 PM EST</p>
+            </div>
+            <button 
+              class="contact-btn primary" 
+              (click)="openChat()"
+              [disabled]="chatStatus() === 'offline'"
+            >
+              {{ chatStatus() === 'online' ? 'Start Chat' : 'Chat Offline' }}
+            </button>
+          </div>
+  
+          <div class="contact-card">
+            <div class="contact-header">
+              <span class="contact-icon">✉️</span>
+              <h3>Email Support</h3>
+            </div>
+            <p>Send us a detailed message about your issue</p>
+            <div class="contact-details">
+              <p><strong>Response time:</strong> Within 24 hours</p>
+              <p><strong>Email:</strong> support&#64;xenith.com</p>
+            </div>
+            <button class="contact-btn secondary" (click)="sendEmail()">
+              Send Email
+            </button>
+          </div>
+  
+          <div class="contact-card">
+            <div class="contact-header">
+              <span class="contact-icon">📞</span>
+              <h3>Phone Support</h3>
+            </div>
+            <p>Speak directly with our support team</p>
+            <div class="contact-details">
+              <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+              <p><strong>Available:</strong> Mon-Fri, 9 AM - 5 PM EST</p>
+            </div>
+            <button class="contact-btn tertiary" (click)="callPhone()">
+              Call Now
+            </button>
+          </div>
+        </div>
+  
+        <!-- Contact Form -->
+        <div class="contact-form-section">
+          <h3>Send us a Message</h3>
+          <form [formGroup]="contactForm" (ngSubmit)="submitContactForm()" class="contact-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="contact-name">Name *</label>
+                <input 
+                  type="text" 
+                  id="contact-name" 
+                  formControlName="name"
+                  placeholder="Your name"
+                  [class.error]="isFieldInvalid('name')"
+                >
+                <div *ngIf="isFieldInvalid('name')" class="error-message">
+                  Name is required
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="contact-email">Email *</label>
+                <input 
+                  type="email" 
+                  id="contact-email" 
+                  formControlName="email"
+                  placeholder="your@email.com"
+                  [class.error]="isFieldInvalid('email')"
+                >
+                <div *ngIf="isFieldInvalid('email')" class="error-message">
+                  {{ getEmailErrorMessage() }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-field">
+              <label for="contact-subject">Subject *</label>
+              <select 
+                id="contact-subject" 
+                formControlName="subject"
+                [class.error]="isFieldInvalid('subject')"
+              >
+                <option value="">Select a topic</option>
+                <option value="billing">Billing & Payments</option>
+                <option value="technical">Technical Issue</option>
+                <option value="feature">Feature Request</option>
+                <option value="account">Account Management</option>
+                <option value="other">Other</option>
+              </select>
+              <div *ngIf="isFieldInvalid('subject')" class="error-message">
+                Please select a subject
+              </div>
+            </div>
+            
+            <div class="form-field">
+              <label for="contact-message">Message *</label>
+              <textarea 
+                id="contact-message" 
+                formControlName="message"
+                rows="5" 
+                placeholder="Describe your question or issue in detail..."
+                [class.error]="isFieldInvalid('message')"
+              ></textarea>
+              <div *ngIf="isFieldInvalid('message')" class="error-message">
+                Message is required
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="submit-btn"
+                [disabled]="contactForm.invalid || isSubmitting()"
+              >
+                {{ isSubmitting() ? 'Sending...' : 'Send Message' }}
+              </button>
+              <button 
+                type="button" 
+                class="cancel-btn"
+                (click)="resetContactForm()"
+              >
+                Reset
+              </button>
+            </div>
+          </form>
+  
+          <!-- Success Message -->
+          <div *ngIf="showSuccessMessage()" class="success-message">
+            <span class="success-icon">✅</span>
+            <h4>Message Sent Successfully!</h4>
+            <p>We'll get back to you within 24 hours.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

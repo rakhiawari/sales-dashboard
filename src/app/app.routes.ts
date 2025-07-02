@@ -16,18 +16,18 @@ export const routes: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./components/dashboard/dashboard.js').then(m => m.DashboardComponent)
   },
-  // {
-  //   path: 'analytics',
-  //   loadComponent: () => import('./components/analytics/analytics.js').then(m => m.AnalyticsComponent)
-  // },
+  {
+    path: 'user',
+    loadComponent: () => import('./components/manage-user/manage-user.js').then(m => m.ManageUserComponent)
+  },
   {
     path: 'explore',
     loadComponent: () => import('./components/explore/explore.js').then(m => m.ExploreComponent)
   },
-  // {
-  //   path: 'shop',
-  //   loadChildren: () => import('./components/shop/shop.routes').then(m => m.shopRoutes)
-  // },
+  {
+    path: 'shop',
+    loadComponent: () => import('./components/shop/shop.js').then(m => m.ShopComponent)
+  },
   {
     path: 'chat',
     loadComponent: () => import('./components/chat/chat.js').then(m => m.ChatComponent)
@@ -36,10 +36,10 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () => import('./components/settings/settings.js').then(m => m.SettingsComponent)
   },
-  // {
-  //   path: 'help',
-  //   loadComponent: () => import('./pages/help/help.component').then(m => m.HelpComponent)
-  // },
+  {
+    path: 'help',
+    loadComponent: () => import('./components/help/help.js').then(m => m.HelpComponent)
+  },
   // {
   //   path: 'profile',
   //   loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent)

@@ -1,0 +1,594 @@
+<div class="manage-user-page">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-text">
+          <h1>Manage Users</h1>
+          <p>Manage team members, roles, and permissions</p>
+        </div>
+        
+        <div class="header-actions">
+          <button class="action-btn secondary" (click)="exportUsers()">
+            <span class="btn-icon">📊</span>
+            Export Users
+          </button>
+          <button class="action-btn primary" (click)="openInviteModal()">
+            <span class="btn-icon">👥</span>
+            Invite User
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- User Management Tabs -->
+    <nav class="user-tabs">
+      <button 
+        class="tab-item"
+        [class.active]="activeTab() === 'users'"
+        (click)="setActiveTab('users')"
+      >
+        <span class="tab-icon">👥</span>
+        <span class="tab-label">Users ({{ filteredUsers().length }})</span>
+      </button>
+      
+      <button 
+        class="tab-item"
+        [class.active]="activeTab() === 'roles'"
+        (click)="setActiveTab('roles')"
+      >
+        <span class="tab-icon">🛡️</span>
+        <span class="tab-label">Roles & Permissions</span>
+      </button>
+      
+      <button 
+        class="tab-item"
+        [class.active]="activeTab() === 'invitations'"
+        (click)="setActiveTab('invitations')"
+      >
+        <span class="tab-icon">📧</span>
+        <span class="tab-label">Invitations ({{ pendingInvitations().length }})</span>
+      </button>
+      
+      <button 
+        class="tab-item"
+        [class.active]="activeTab() === 'activity'"
+        (click)="setActiveTab('activity')"
+      >
+        <span class="tab-icon">📈</span>
+        <span class="tab-label">Activity Log</span>
+      </button>
+    </nav>
+  
+    <!-- Content Area -->
+    <div class="content-area">
+      
+      <!-- Users Tab -->
+      <div *ngIf="activeTab() === 'users'" class="tab-content users-tab">
+        
+        <!-- Filters & Search -->
+        <div class="filters-section">
+          <div class="search-bar">
+            <input 
+              type="text" 
+              placeholder="Search users..." 
+              [value]="searchQuery()"
+              (input)="onSearch($event)"
+            >
+            <span class="search-icon">🔍</span>
+          </div>
+          
+          <div class="filter-controls">
+            <select 
+              class="filter-select"
+              [value]="roleFilter()"
+              (change)="setRoleFilter($any($event.target).value)"
+            >
+              <option value="all">All Roles</option>
+              <option *ngFor="let role of userRoles()" [value]="role.id">{{ role.name }}</option>
+            </select>
+            
+            <select 
+              class="filter-select"
+              [value]="statusFilter()"
+              (change)="setStatusFilter($any($event.target).value)"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+            </select>
+            
+            <select 
+              class="filter-select"
+              [value]="departmentFilter()"
+              (change)="setDepartmentFilter($any($event.target).value)"
+            >
+              <option value="all">All Departments</option>
+              <option value="sales">Sales</option>
+              <option value="marketing">Marketing</option>
+              <option value="support">Support</option>
+              <option value="admin">Admin</option>
+            </select>
+            
+            <button class="clear-filters" (click)="clearFilters()" *ngIf="hasActiveFilters()">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+  
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" *ngIf="selectedUsers().size > 0">
+          <div class="bulk-info">
+            <span>{{ selectedUsers().size }} user(s) selected</span>
+          </div>
+          <div class="bulk-controls">
+            <button 
+              *ngFor="let action of bulkActions()" 
+              class="bulk-btn"
+              (click)="executeBulkAction(action)"
+            >
+              <span class="bulk-icon">{{ action.icon }}</span>
+              {{ action.name }}
+            </button>
+          </div>
+        </div>
+  
+        <!-- Users Table -->
+        <div class="users-table-container">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col">
+                  <label class="table-checkbox">
+                    <input 
+                      type="checkbox" 
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isPartiallySelected()"
+                      (change)="toggleSelectAll()"
+                    >
+                  </label>
+                </th>
+                <th (click)="setSortBy('name')" class="sortable">
+                  User
+                  <span class="sort-icon">{{ getSortIcon('name') }}</span>
+                </th>
+                <th (click)="setSortBy('role')" class="sortable">
+                  Role
+                  <span class="sort-icon">{{ getSortIcon('role') }}</span>
+                </th>
+                <th>Department</th>
+                <th (click)="setSortBy('status')" class="sortable">
+                  Status
+                  <span class="sort-icon">{{ getSortIcon('status') }}</span>
+                </th>
+                <th (click)="setSortBy('lastLogin')" class="sortable">
+                  Last Login
+                  <span class="sort-icon">{{ getSortIcon('lastLogin') }}</span>
+                </th>
+                <th>Performance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                *ngFor="let user of filteredUsers(); trackBy: trackByUserId" 
+                class="user-row"
+                [class.selected]="selectedUsers().has(user.id)"
+              >
+                <td class="checkbox-col">
+                  <label class="table-checkbox">
+                    <input 
+                      type="checkbox" 
+                      [checked]="selectedUsers().has(user.id)"
+                      (change)="toggleUserSelection(user.id)"
+                    >
+                  </label>
+                </td>
+                
+                <td class="user-info">
+                  <div class="user-avatar-container">
+                    <img [src]="user.avatar" [alt]="user.firstName + ' ' + user.lastName" class="user-avatar">
+                    <span class="online-indicator" [class.online]="user.isOnline"></span>
+                  </div>
+                  <div class="user-details">
+                    <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                    <div class="user-email">{{ user.email }}</div>
+                  </div>
+                </td>
+                
+                <td class="user-role">
+                  <span class="role-badge" [style.background-color]="user.role.color">
+                    {{ user.role.name }}
+                  </span>
+                </td>
+                
+                <td class="user-department">{{ user.department }}</td>
+                
+                <td class="user-status">
+                  <span class="status-badge" [class]="user.status">
+                    {{ user.status | titlecase }}
+                  </span>
+                </td>
+                
+                <td class="last-login">
+                  <span class="login-time">{{ formatRelativeTime(user.lastLogin) }}</span>
+                </td>
+                
+                <td class="user-performance">
+                  <div class="performance-stats" *ngIf="user.totalOrders">
+                    <div class="stat-item">
+                      <span class="stat-value">{{ user.totalOrders }}</span>
+                      <span class="stat-label">Orders</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-value">\${{ formatCurrency(user.totalRevenue || 0) }}</span>
+                      <span class="stat-label">Revenue</span>
+                    </div>
+                  </div>
+                  <span *ngIf="!user.totalOrders" class="no-data">N/A</span>
+                </td>
+                
+                <td class="user-actions">
+                  <div class="action-buttons">
+                    <button 
+                      class="action-btn-small view"
+                      (click)="viewUser(user)"
+                      title="View Profile"
+                    >
+                      👁️
+                    </button>
+                    <button 
+                      class="action-btn-small edit"
+                      (click)="editUser(user)"
+                      title="Edit User"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      class="action-btn-small delete"
+                      (click)="confirmDeleteUser(user)"
+                      title="Delete User"
+                      [disabled]="user.id === currentUserId()"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+  
+          <!-- No Users Found -->
+          <div *ngIf="filteredUsers().length === 0" class="no-users">
+            <div class="no-users-content">
+              <span class="no-users-icon">👥</span>
+              <h3>No users found</h3>
+              <p>Try adjusting your search or filter criteria</p>
+              <button class="reset-btn" (click)="clearFilters()">Reset Filters</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Roles & Permissions Tab -->
+      <div *ngIf="activeTab() === 'roles'" class="tab-content roles-tab">
+        <div class="roles-header">
+          <h2>Roles & Permissions</h2>
+          <button class="action-btn primary" (click)="createRole()">
+            <span class="btn-icon">➕</span>
+            Create Role
+          </button>
+        </div>
+  
+        <div class="roles-grid">
+          <div *ngFor="let role of userRoles()" class="role-card">
+            <div class="role-header">
+              <div class="role-info">
+                <div class="role-name" [style.color]="role.color">{{ role.name }}</div>
+                <div class="role-description">{{ role.description }}</div>
+              </div>
+              <div class="role-actions">
+                <button class="role-action-btn" (click)="editRole(role)">✏️</button>
+                <button class="role-action-btn delete" (click)="deleteRole(role)">🗑️</button>
+              </div>
+            </div>
+            
+            <div class="role-stats">
+              <div class="stat">
+                <span class="stat-number">{{ getUsersInRole(role.id) }}</span>
+                <span class="stat-label">Users</span>
+              </div>
+              <div class="stat">
+                <span class="stat-number">{{ getPermissionsCount(role.id) }}</span>
+                <span class="stat-label">Permissions</span>
+              </div>
+            </div>
+            
+            <div class="role-permissions">
+              <h4>Key Permissions:</h4>
+              <div class="permission-list">
+                <span 
+                  *ngFor="let permission of getKeyPermissions(role.id)" 
+                  class="permission-badge"
+                >
+                  {{ permission.name }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Invitations Tab -->
+      <div *ngIf="activeTab() === 'invitations'" class="tab-content invitations-tab">
+        <div class="invitations-header">
+          <h2>Team Invitations</h2>
+          <button class="action-btn primary" (click)="openInviteModal()">
+            <span class="btn-icon">📧</span>
+            Send Invitation
+          </button>
+        </div>
+  
+        <div class="invitations-list">
+          <div *ngFor="let invitation of teamInvitations()" class="invitation-card">
+            <div class="invitation-info">
+              <div class="invitation-email">{{ invitation.email }}</div>
+              <div class="invitation-details">
+                <span class="invitation-role" [style.color]="invitation.role.color">
+                  {{ invitation.role.name }}
+                </span>
+                <span class="invitation-date">
+                  Invited {{ formatRelativeTime(invitation.invitedAt) }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="invitation-status">
+              <span class="status-badge" [class]="invitation.status">
+                {{ invitation.status | titlecase }}
+              </span>
+            </div>
+            
+            <div class="invitation-actions">
+              <button 
+                class="action-btn-small resend"
+                (click)="resendInvitation(invitation)"
+                *ngIf="invitation.status === 'pending'"
+              >
+                📧 Resend
+              </button>
+              <button 
+                class="action-btn-small delete"
+                (click)="cancelInvitation(invitation)"
+              >
+                ❌ Cancel
+              </button>
+            </div>
+          </div>
+  
+          <!-- No Invitations -->
+          <div *ngIf="teamInvitations().length === 0" class="no-invitations">
+            <span class="no-invitations-icon">📧</span>
+            <h3>No pending invitations</h3>
+            <p>Send invitations to add new team members</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Activity Log Tab -->
+      <div *ngIf="activeTab() === 'activity'" class="tab-content activity-tab">
+        <div class="activity-header">
+          <h2>User Activity Log</h2>
+          <div class="activity-filters">
+            <select class="filter-select" [value]="activityFilter()" (change)="setActivityFilter($any($event.target).value)">
+              <option value="all">All Activities</option>
+              <option value="login">Login Events</option>
+              <option value="create">User Created</option>
+              <option value="update">Profile Updates</option>
+              <option value="delete">User Deleted</option>
+            </select>
+          </div>
+        </div>
+  
+        <div class="activity-timeline">
+          <div *ngFor="let activity of filteredActivity()" class="activity-item">
+            <div class="activity-time">{{ formatActivityTime(activity.timestamp) }}</div>
+            <div class="activity-content">
+              <div class="activity-action">{{ activity.action }}</div>
+              <div class="activity-details">{{ activity.details }}</div>
+              <div class="activity-meta">
+                IP: {{ activity.ipAddress }} • {{ getDeviceInfo(activity.userAgent) }}
+              </div>
+            </div>
+          </div>
+  
+          <!-- No Activity -->
+          <div *ngIf="filteredActivity().length === 0" class="no-activity">
+            <span class="no-activity-icon">📈</span>
+            <h3>No activity found</h3>
+            <p>No user activity matches your current filters</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- User Detail Modal -->
+    <div class="modal-overlay" *ngIf="selectedUserDetail()" (click)="closeUserDetail()">
+      <div class="modal-content user-detail-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>User Profile</h2>
+          <button class="modal-close" (click)="closeUserDetail()">×</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="user-profile-section">
+            <div class="profile-header">
+              <div class="profile-avatar-large">
+                <img [src]="selectedUserDetail()!.avatar" [alt]="selectedUserDetail()!.firstName" class="avatar-img">
+                <span class="online-indicator-large" [class.online]="selectedUserDetail()!.isOnline"></span>
+              </div>
+              <div class="profile-info">
+                <h3>{{ selectedUserDetail()!.firstName }} {{ selectedUserDetail()!.lastName }}</h3>
+                <p class="profile-email">{{ selectedUserDetail()!.email }}</p>
+                <span class="profile-role" [style.color]="selectedUserDetail()!.role.color">
+                  {{ selectedUserDetail()!.role.name }}
+                </span>
+              </div>
+            </div>
+  
+            <div class="profile-details">
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Department</label>
+                  <span>{{ selectedUserDetail()!.department }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Join Date</label>
+                  <span>{{ formatDate(selectedUserDetail()!.joinDate) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Last Login</label>
+                  <span>{{ formatRelativeTime(selectedUserDetail()!.lastLogin) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Status</label>
+                  <span class="status-badge" [class]="selectedUserDetail()!.status">
+                    {{ selectedUserDetail()!.status | titlecase }}
+                  </span>
+                </div>
+                <div class="detail-item" *ngIf="selectedUserDetail()!.phone">
+                  <label>Phone</label>
+                  <span>{{ selectedUserDetail()!.phone }}</span>
+                </div>
+                <div class="detail-item" *ngIf="selectedUserDetail()!.location">
+                  <label>Location</label>
+                  <span>{{ selectedUserDetail()!.location }}</span>
+                </div>
+              </div>
+  
+              <div class="detail-item bio" *ngIf="selectedUserDetail()!.bio">
+                <label>Bio</label>
+                <p>{{ selectedUserDetail()!.bio }}</p>
+              </div>
+            </div>
+  
+            <div class="profile-permissions">
+              <h4>Permissions</h4>
+              <div class="permissions-grid">
+                <div 
+                  *ngFor="let permission of selectedUserDetail()!.permissions" 
+                  class="permission-item"
+                  [class.granted]="permission.granted"
+                >
+                  <div class="permission-name">{{ permission.name }}</div>
+                  <div class="permission-status">
+                    {{ permission.granted ? '✅' : '❌' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="action-btn secondary" (click)="closeUserDetail()">Close</button>
+          <button class="action-btn primary" (click)="editUser(selectedUserDetail()!)">Edit User</button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Invite User Modal -->
+    <div class="modal-overlay" *ngIf="showInviteModal()" (click)="closeInviteModal()">
+      <div class="modal-content invite-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Invite Team Member</h2>
+          <button class="modal-close" (click)="closeInviteModal()">×</button>
+        </div>
+        
+        <form [formGroup]="inviteForm" (ngSubmit)="sendInvitation()" class="modal-body">
+          <div class="form-field">
+            <label>Email Address *</label>
+            <input type="email" formControlName="email" placeholder="colleague@company.com">
+            <div class="error" *ngIf="isInviteFieldInvalid('email')">Valid email is required</div>
+          </div>
+  
+          <div class="form-field">
+            <label>Role *</label>
+            <select formControlName="roleId">
+              <option value="">Select a role</option>
+              <option *ngFor="let role of userRoles()" [value]="role.id">{{ role.name }}</option>
+            </select>
+            <div class="error" *ngIf="isInviteFieldInvalid('roleId')">Role is required</div>
+          </div>
+  
+          <div class="form-field">
+            <label>Department</label>
+            <select formControlName="department">
+              <option value="">Select department</option>
+              <option value="sales">Sales</option>
+              <option value="marketing">Marketing</option>
+              <option value="support">Support</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+  
+          <div class="form-field">
+            <label>Personal Message (Optional)</label>
+            <textarea 
+              formControlName="message" 
+              rows="3" 
+              placeholder="Welcome to the team! We're excited to have you on board."
+            ></textarea>
+          </div>
+        </form>
+        
+        <div class="modal-footer">
+          <button class="action-btn secondary" (click)="closeInviteModal()">Cancel</button>
+          <button 
+            class="action-btn primary" 
+            (click)="sendInvitation()"
+            [disabled]="inviteForm.invalid || isSendingInvite()"
+          >
+            {{ isSendingInvite() ? 'Sending...' : 'Send Invitation' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" *ngIf="showConfirmModal()" (click)="closeConfirmModal()">
+      <div class="modal-content confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ confirmModalData().title }}</h2>
+          <button class="modal-close" (click)="closeConfirmModal()">×</button>
+        </div>
+        
+        <div class="modal-body">
+          <p>{{ confirmModalData().message }}</p>
+          <div class="warning-note" *ngIf="confirmModalData().isDestructive">
+            <span class="warning-icon">⚠️</span>
+            This action cannot be undone.
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="action-btn secondary" (click)="closeConfirmModal()">Cancel</button>
+          <button 
+            class="action-btn"
+            [class]="confirmModalData().isDestructive ? 'danger' : 'primary'"
+            (click)="confirmAction()"
+          >
+            {{ confirmModalData().confirmText }}
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" *ngIf="isLoading()">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <span>{{ loadingMessage() }}</span>
+      </div>
+    </div>
+  </div>

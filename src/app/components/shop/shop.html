@@ -1,0 +1,616 @@
+<div class="shop-page">
+  <!-- Shop Header -->
+  <div class="shop-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Shop</h1>
+        <p>Discover amazing products curated just for you</p>
+      </div>
+      
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <div class="search-bar">
+          <input 
+            type="text" 
+            placeholder="Search products..." 
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+          >
+          <span class="search-icon">🔍</span>
+        </div>
+        
+        <button class="cart-toggle" (click)="toggleCart()">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-count" *ngIf="cartItemCount() > 0">{{ cartItemCount() }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shop Content -->
+  <div class="shop-content">
+    
+    <!-- Sidebar Filters -->
+    <aside class="shop-sidebar" [class.collapsed]="sidebarCollapsed()">
+      <div class="sidebar-header">
+        <h3>Filters</h3>
+        <button class="collapse-btn" (click)="toggleSidebar()">
+          {{ sidebarCollapsed() ? '→' : '←' }}
+        </button>
+      </div>
+      
+      <div class="filter-section" *ngIf="!sidebarCollapsed()">
+        <!-- Categories -->
+        <div class="filter-group">
+          <h4>Categories</h4>
+          <div class="category-list">
+            <button 
+              *ngFor="let category of categories()" 
+              class="category-item"
+              [class.active]="selectedCategory() === category.id"
+              (click)="selectCategory(category.id)"
+            >
+              <span class="category-icon">{{ category.icon }}</span>
+              <span class="category-name">{{ category.name }}</span>
+              <span class="category-count">({{ category.productCount }})</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-group">
+          <h4>Price Range</h4>
+          <div class="price-filter">
+            <div class="price-inputs">
+              <input 
+                type="number" 
+                placeholder="Min" 
+                [value]="priceFilter().min"
+                (input)="updatePriceFilter('min', $event)"
+              >
+              <span>-</span>
+              <input 
+                type="number" 
+                placeholder="Max"
+                [value]="priceFilter().max"
+                (input)="updatePriceFilter('max', $event)"
+              >
+            </div>
+            <div class="price-range-display">
+              \${{ priceFilter().min }} - \${{ priceFilter().max }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Rating Filter -->
+        <div class="filter-group">
+          <h4>Rating</h4>
+          <div class="rating-filter">
+            <button 
+              *ngFor="let rating of [4, 3, 2, 1]" 
+              class="rating-option"
+              [class.active]="ratingFilter() === rating"
+              (click)="setRatingFilter(rating)"
+            >
+              <div class="stars">
+                <span *ngFor="let i of getStarArray(rating)">★</span>
+              </div>
+              <span>& up</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Additional Filters -->
+        <div class="filter-group">
+          <h4>Options</h4>
+          <div class="option-filters">
+            <label class="filter-checkbox">
+              <input 
+                type="checkbox" 
+                [checked]="showInStockOnly()"
+                (change)="toggleInStockFilter()"
+              >
+              <span>In Stock Only</span>
+            </label>
+            <label class="filter-checkbox">
+              <input 
+                type="checkbox" 
+                [checked]="showSaleOnly()"
+                (change)="toggleSaleFilter()"
+              >
+              <span>On Sale</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Clear Filters -->
+        <button class="clear-filters-btn" (click)="clearFilters()">
+          Clear All Filters
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="shop-main">
+      
+      <!-- Toolbar -->
+      <div class="shop-toolbar">
+        <div class="results-info">
+          <span>{{ filteredProducts().length }} products found</span>
+        </div>
+        
+        <div class="toolbar-actions">
+          <!-- View Toggle -->
+          <div class="view-toggle">
+            <button 
+              class="view-btn"
+              [class.active]="viewMode() === 'grid'"
+              (click)="setViewMode('grid')"
+            >
+              <span class="grid-icon">⊞</span>
+            </button>
+            <button 
+              class="view-btn"
+              [class.active]="viewMode() === 'list'"
+              (click)="setViewMode('list')"
+            >
+              <span class="list-icon">☰</span>
+            </button>
+          </div>
+
+          <!-- Sort Options -->
+          <select 
+            class="sort-select"
+            [value]="sortBy()"
+            (change)="setSortBy($any($event.target).value)"
+          >
+            <option value="featured">Featured</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="name">Name A-Z</option>
+            <option value="rating">Highest Rated</option>
+            <option value="newest">Newest</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Products Grid/List -->
+      <div class="products-container" [class]="viewMode()">
+        <div 
+          *ngFor="let product of filteredProducts(); trackBy: trackByProductId" 
+          class="product-card"
+          (click)="openProductDetail(product)"
+        >
+          <!-- Product Image -->
+          <div class="product-image-container">
+            <img [src]="product.image" [alt]="product.name" class="product-image">
+            
+            <!-- Badges -->
+            <div class="product-badges">
+              <span *ngIf="product.isNew" class="badge new">New</span>
+              <span *ngIf="product.isSale" class="badge sale">Sale</span>
+              <span *ngIf="product.discount" class="badge discount">-{{ product.discount }}%</span>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="product-actions">
+              <button 
+                class="quick-action wishlist"
+                (click)="toggleWishlist(product, $event)"
+                [class.active]="isInWishlist(product.id)"
+              >
+                ♡
+              </button>
+              <button 
+                class="quick-action quick-view"
+                (click)="openProductDetail(product, $event)"
+              >
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <!-- Product Info -->
+          <div class="product-info">
+            <div class="product-category">{{ product.category }}</div>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <p class="product-description" *ngIf="viewMode() === 'list'">{{ product.description }}</p>
+            
+            <!-- Rating -->
+            <div class="product-rating">
+              <div class="stars">
+                <span *ngFor="let star of getProductStars(product.rating)">{{ star }}</span>
+              </div>
+              <span class="review-count">({{ product.reviewCount }})</span>
+            </div>
+
+            <!-- Price -->
+            <div class="product-price">
+              <span class="current-price">\${{ product.price }}</span>
+              <span *ngIf="product.originalPrice" class="original-price">\${{ product.originalPrice }}</span>
+            </div>
+
+            <!-- Stock Status -->
+            <div class="stock-status" [class]="getStockStatusClass(product.stockCount)">
+              {{ getStockStatusText(product.stockCount) }}
+            </div>
+
+            <!-- Add to Cart -->
+            <button 
+              class="add-to-cart-btn"
+              [disabled]="product.stockCount === 0"
+              (click)="addToCart(product, $event)"
+            >
+              {{ product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- No Results -->
+        <div *ngIf="filteredProducts().length === 0" class="no-results">
+          <div class="no-results-content">
+            <span class="no-results-icon">🔍</span>
+            <h3>No products found</h3>
+            <p>Try adjusting your search or filter criteria</p>
+            <button class="reset-btn" (click)="clearFilters()">Clear Filters</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More -->
+      <div class="load-more-section" *ngIf="hasMoreProducts()">
+        <button class="load-more-btn" (click)="loadMoreProducts()" [disabled]="isLoading()">
+          {{ isLoading() ? 'Loading...' : 'Load More Products' }}
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shopping Cart Sidebar -->
+  <div class="cart-sidebar" [class.open]="showCart()">
+    <div class="cart-header">
+      <h3>Shopping Cart ({{ cartItemCount() }})</h3>
+      <button class="close-cart" (click)="toggleCart()">×</button>
+    </div>
+
+    <div class="cart-content">
+      <!-- Cart Items -->
+      <div class="cart-items" *ngIf="cartItems().length > 0">
+        <div *ngFor="let item of cartItems(); trackBy: trackByCartItem" class="cart-item">
+          <img [src]="item.product.image" [alt]="item.product.name" class="cart-item-image">
+          
+          <div class="cart-item-details">
+            <h4>{{ item.product.name }}</h4>
+            <div class="cart-item-options" *ngIf="item.selectedSize || item.selectedColor">
+              <span *ngIf="item.selectedSize">Size: {{ item.selectedSize }}</span>
+              <span *ngIf="item.selectedColor">Color: {{ item.selectedColor }}</span>
+            </div>
+            <div class="cart-item-price">\${{ item.product.price }}</div>
+          </div>
+
+          <div class="cart-item-actions">
+            <div class="quantity-controls">
+              <button (click)="updateCartItemQuantity(item, item.quantity - 1)">-</button>
+              <span>{{ item.quantity }}</span>
+              <button (click)="updateCartItemQuantity(item, item.quantity + 1)">+</button>
+            </div>
+            <button class="remove-item" (click)="removeFromCart(item)">🗑️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty Cart -->
+      <div class="empty-cart" *ngIf="cartItems().length === 0">
+        <span class="empty-icon">🛒</span>
+        <h4>Your cart is empty</h4>
+        <p>Add some products to get started</p>
+      </div>
+    </div>
+
+    <!-- Cart Footer -->
+    <div class="cart-footer" *ngIf="cartItems().length > 0">
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Subtotal:</span>
+          <span>\${{ cartSubtotal() }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping:</span>
+          <span>{{ cartSubtotal() > 100 ? 'Free' : '$9.99' }}</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total:</span>
+          <span>\${{ cartTotal() }}</span>
+        </div>
+      </div>
+
+      <div class="cart-actions">
+        <button class="view-cart-btn" (click)="viewCart()">View Cart</button>
+        <button class="checkout-btn" (click)="startCheckout()">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="product-modal" *ngIf="selectedProduct()" (click)="closeProductDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeProductDetail()">×</button>
+      
+      <div class="product-detail">
+        <!-- Product Images -->
+        <div class="product-images">
+          <img 
+            [src]="selectedProduct()!.image" 
+            [alt]="selectedProduct()!.name" 
+            class="main-image"
+          >
+          <div class="thumbnail-images" *ngIf="selectedProduct()!.images.length > 1">
+            <img 
+              *ngFor="let image of selectedProduct()!.images" 
+              [src]="image" 
+              [alt]="selectedProduct()!.name"
+              class="thumbnail"
+              (click)="selectProductImage(image)"
+            >
+          </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="product-details">
+          <div class="product-category">{{ selectedProduct()!.category }}</div>
+          <h2>{{ selectedProduct()!.name }}</h2>
+          <p class="product-description">{{ selectedProduct()!.description }}</p>
+
+          <!-- Rating -->
+          <div class="product-rating">
+            <div class="stars">
+              <span *ngFor="let star of getProductStars(selectedProduct()!.rating)">{{ star }}</span>
+            </div>
+            <span class="rating-text">{{ selectedProduct()!.rating }} ({{ selectedProduct()!.reviewCount }} reviews)</span>
+          </div>
+
+          <!-- Price -->
+          <div class="product-price">
+            <span class="current-price">\${{ selectedProduct()!.price }}</span>
+            <span *ngIf="selectedProduct()!.originalPrice" class="original-price">\${{ selectedProduct()!.originalPrice }}</span>
+          </div>
+
+          <!-- Features -->
+          <div class="product-features" *ngIf="selectedProduct()!.features?.length">
+            <h4>Features:</h4>
+            <ul>
+              <li *ngFor="let feature of selectedProduct()!.features">{{ feature }}</li>
+            </ul>
+          </div>
+
+          <!-- Size Selection -->
+          <div class="size-selection" *ngIf="selectedProduct()!.sizes?.length">
+            <h4>Size:</h4>
+            <div class="size-options">
+              <button 
+                *ngFor="let size of selectedProduct()!.sizes" 
+                class="size-option"
+                [class.selected]="selectedSize() === size"
+                (click)="selectSize(size)"
+              >
+                {{ size }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Color Selection -->
+          <div class="color-selection" *ngIf="selectedProduct()!.colors?.length">
+            <h4>Color:</h4>
+            <div class="color-options">
+              <button 
+                *ngFor="let color of selectedProduct()!.colors" 
+                class="color-option"
+                [class.selected]="selectedColor() === color"
+                [style.background-color]="getColorHex(color)"
+                (click)="selectColor(color)"
+                [title]="color"
+              >
+              </button>
+            </div>
+          </div>
+
+          <!-- Stock Status -->
+          <div class="stock-info">
+            <span class="stock-status" [class]="getStockStatusClass(selectedProduct()!.stockCount)">
+              {{ getStockStatusText(selectedProduct()!.stockCount) }}
+            </span>
+            <span class="stock-count" *ngIf="selectedProduct()!.stockCount > 0">
+              {{ selectedProduct()!.stockCount }} items left
+            </span>
+          </div>
+
+          <!-- Add to Cart -->
+          <div class="product-actions">
+            <div class="quantity-selector">
+              <button (click)="decrementQuantity()">-</button>
+              <span>{{ selectedQuantity() }}</span>
+              <button (click)="incrementQuantity()">+</button>
+            </div>
+            
+            <button 
+              class="add-to-cart-btn primary"
+              [disabled]="selectedProduct()!.stockCount === 0"
+              (click)="addSelectedToCart()"
+            >
+              Add to Cart - \${{ (selectedProduct()!.price * selectedQuantity()).toFixed(2) }}
+            </button>
+
+            <button 
+              class="wishlist-btn"
+              [class.active]="isInWishlist(selectedProduct()!.id)"
+              (click)="toggleWishlist(selectedProduct()!)"
+            >
+              {{ isInWishlist(selectedProduct()!.id) ? '❤️' : '♡' }} 
+              {{ isInWishlist(selectedProduct()!.id) ? 'Remove from' : 'Add to' }} Wishlist
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="checkout-modal" *ngIf="showCheckout()" (click)="closeCheckout()">
+    <div class="checkout-content" (click)="$event.stopPropagation()">
+      <div class="checkout-header">
+        <h2>Checkout</h2>
+        <button class="modal-close" (click)="closeCheckout()">×</button>
+      </div>
+
+      <div class="checkout-body">
+        <!-- Order Summary -->
+        <div class="order-summary">
+          <h3>Order Summary</h3>
+          <div class="summary-items">
+            <div *ngFor="let item of cartItems()" class="summary-item">
+              <img [src]="item.product.image" [alt]="item.product.name">
+              <div class="item-details">
+                <span class="item-name">{{ item.product.name }}</span>
+                <span class="item-quantity">Qty: {{ item.quantity }}</span>
+              </div>
+              <span class="item-total">\${{ (item.product.price * item.quantity).toFixed(2) }}</span>
+            </div>
+          </div>
+          
+          <div class="summary-totals">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>\${{ cartSubtotal() }}</span>
+            </div>
+            <div class="total-row">
+              <span>Shipping:</span>
+              <span>{{ cartSubtotal() > 100 ? 'Free' : '$9.99' }}</span>
+            </div>
+            <div class="total-row final">
+              <span>Total:</span>
+              <span>\${{ cartTotal() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Checkout Form -->
+        <form [formGroup]="checkoutForm" (ngSubmit)="processCheckout()" class="checkout-form">
+          <h3>Billing Information</h3>
+          
+          <div class="form-row">
+            <div class="form-field">
+              <label>Email *</label>
+              <input type="email" formControlName="email" placeholder="your@email.com">
+              <div class="error" *ngIf="isFieldInvalid('email')">Valid email is required</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>First Name *</label>
+              <input type="text" formControlName="firstName" placeholder="John">
+              <div class="error" *ngIf="isFieldInvalid('firstName')">First name is required</div>
+            </div>
+            <div class="form-field">
+              <label>Last Name *</label>
+              <input type="text" formControlName="lastName" placeholder="Doe">
+              <div class="error" *ngIf="isFieldInvalid('lastName')">Last name is required</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Address *</label>
+              <input type="text" formControlName="address" placeholder="123 Main Street">
+              <div class="error" *ngIf="isFieldInvalid('address')">Address is required</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>City *</label>
+              <input type="text" formControlName="city" placeholder="New York">
+              <div class="error" *ngIf="isFieldInvalid('city')">City is required</div>
+            </div>
+            <div class="form-field">
+              <label>Postal Code *</label>
+              <input type="text" formControlName="postalCode" placeholder="10001">
+              <div class="error" *ngIf="isFieldInvalid('postalCode')">Postal code is required</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Country *</label>
+              <select formControlName="country">
+                <option value="">Select Country</option>
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+                <option value="UK">United Kingdom</option>
+                <option value="AU">Australia</option>
+              </select>
+              <div class="error" *ngIf="isFieldInvalid('country')">Country is required</div>
+            </div>
+          </div>
+
+          <h3>Payment Method</h3>
+          
+          <div class="payment-methods">
+            <label class="payment-option">
+              <input type="radio" formControlName="paymentMethod" value="credit">
+              <span>Credit Card</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" formControlName="paymentMethod" value="paypal">
+              <span>PayPal</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" formControlName="paymentMethod" value="apple-pay">
+              <span>Apple Pay</span>
+            </label>
+          </div>
+
+          <div *ngIf="checkoutForm.get('paymentMethod')?.value === 'credit'" class="credit-card-fields">
+            <div class="form-row">
+              <div class="form-field">
+                <label>Card Number *</label>
+                <input type="text" formControlName="cardNumber" placeholder="1234 5678 9012 3456">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Expiry Date *</label>
+                <input type="text" formControlName="expiryDate" placeholder="MM/YY">
+              </div>
+              <div class="form-field">
+                <label>CVV *</label>
+                <input type="text" formControlName="cvv" placeholder="123">
+              </div>
+            </div>
+          </div>
+
+          <div class="checkout-actions">
+            <button type="button" class="back-btn" (click)="closeCheckout()">
+              Back to Cart
+            </button>
+            <button 
+              type="submit" 
+              class="place-order-btn"
+              [disabled]="checkoutForm.invalid || isProcessingOrder()"
+            >
+              {{ isProcessingOrder() ? 'Processing...' : 'Place Order' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading()">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <span>Loading...</span>
+    </div>
+  </div>
+</div>

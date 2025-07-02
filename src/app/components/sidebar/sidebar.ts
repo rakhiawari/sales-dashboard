@@ -19,7 +19,7 @@ interface NavItem {
 export class SidebarComponent {
   navItems: NavItem[] = [
     { icon: '🏠', label: 'Home', route: '/dashboard', active: true },
-    { icon: '📊', label: 'Analytics', route: '/analytics' },
+    // { icon: '📊', label: 'Analytics', route: '/analytics' },
     { icon: '🔍', label: 'Explore', route: '/explore' },
     { icon: '🛒', label: 'Shop', route: '/shop' },
     { icon: '💬', label: 'Chat', route: '/chat' }
