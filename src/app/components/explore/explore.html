@@ -1,160 +1,313 @@
 <div class="explore-page">
-    <!-- Hero Section -->
-    <div class="explore-hero">
-      <div class="hero-content">
+  <!-- Loading Overlay -->
+  @if (isLoading()) {
+    <div class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner">⏳</div>
+        <span>Loading explore data...</span>
+      </div>
+    </div>
+  }
+
+  <!-- Hero Section -->
+  <div class="explore-hero">
+    <div class="hero-content">
+      <div class="hero-text">
         <h1>Discover & Explore</h1>
-        <p>Find trending products, insights, and opportunities</p>
-        <div class="search-bar">
+        <p>Find trending products, insights, and opportunities to grow your business</p>
+      </div>
+      
+      <!-- Enhanced Search Bar -->
+      <div class="search-container" [class.focused]="searchFocused()">
+        <div class="search-input-wrapper">
           <input 
             type="text" 
             placeholder="What are you looking for?"
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
             class="search-input">
-          <button class="search-btn btn btn-outline">🔍</button>
-        </div>
-      </div>
-      <div class="hero-stats">
-        <div class="stat">
-          <span class="stat-number">{{ totalItems() }}</span>
-          <span class="stat-label">Total Items</span>
-        </div>
-        <div class="stat">
-          <span class="stat-number">{{ activeCategories() }}</span>
-          <span class="stat-label">Categories</span>
-        </div>
-        <div class="stat">
-          <span class="stat-number">{{ trendingCount() }}</span>
-          <span class="stat-label">Trending Now</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Categories Grid -->
-    <section class="categories-section">
-      <div class="section-header1 section-header flex justify-between items-center">
-        <h2>Browse Categories</h2>
-        <div class="view-options btn btn-outline">
-          <button 
-            class="view-btn btn btn-outline" 
-            [class.active]="categoryView() === 'grid'"
-            (click)="setCategoryView('grid')">
-            Grid
-          </button>
-          <button 
-            class="view-btn btn btn-outline" 
-            [class.active]="categoryView() === 'list'"
-            (click)="setCategoryView('list')">
-            List
+          <button class="search-btn" type="button">
+            <span class="search-icon">🔍</span>
           </button>
         </div>
-      </div>
-
-      <div class="categories-grid" [class]="categoryView()">
-        @for (category of filteredCategories(); track category.id) {
-          <div 
-            class="category-card" 
-            (click)="exploreCategory(category)"
-            [class.trending]="category.trending">
-            @if (category.trending) {
-              <span class="trending-badge">🔥 Trending</span>
+        
+        <!-- Search Results Dropdown -->
+        @if (searchFocused() && searchQuery() && searchResults().length > 0) {
+          <div class="search-results">
+            @for (result of searchResults(); track result.id) {
+              <div class="search-result-item" (click)="selectSearchResult(result)">
+                <span class="result-icon">{{ result.icon }}</span>
+                <div class="result-content">
+                  <div class="result-title">{{ result.title }}</div>
+                  <div class="result-description">{{ result.description }}</div>
+                </div>
+                <span class="result-type">{{ result.type }}</span>
+              </div>
             }
-            <div class="category-icon">{{ category.icon }}</div>
-            <h3 class="category-name">{{ category.name }}</h3>
-            <p class="category-description">{{ category.description }}</p>
-            <div class="category-stats">
-              <span class="item-count">{{ category.itemCount }} items</span>
-            </div>
           </div>
         }
       </div>
-    </section>
+    </div>
+    
+    <!-- Hero Stats -->
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="stat-number">{{ formatNumber(totalItems()) }}</div>
+        <div class="stat-label">Total Items</div>
+        <div class="stat-trend positive">+12.5%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ activeCategories() }}</div>
+        <div class="stat-label">Categories</div>
+        <div class="stat-trend positive">+{{ trendingCount() }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ trendingCount() }}</div>
+        <div class="stat-label">Trending Now</div>
+        <div class="stat-trend">Live</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Trending Section -->
-    <section class="trending-section">
-      <div class="section-header1 section-header flex justify-between items-center">
-        <h2>Trending Now</h2>
-        <div class="trending-filters">
-          <button 
-            class="filter-btn btn btn-outline" 
-            [class.active]="trendingFilter() === 'all'"
-            (click)="setTrendingFilter('all')">
-            All
-          </button>
-          <button 
-            class="filter-btn" 
-            [class.active]="trendingFilter() === 'today'"
-            (click)="setTrendingFilter('today')">
-            Today
-          </button>
-          <button 
-            class="filter-btn" 
-            [class.active]="trendingFilter() === 'week'"
-            (click)="setTrendingFilter('week')">
-            This Week
-          </button>
-          <button 
-            class="filter-btn" 
-            [class.active]="trendingFilter() === 'month'"
-            (click)="setTrendingFilter('month')">
-            This Month
-          </button>
+  <!-- Quick Actions -->
+  <section class="quick-actions-section">
+    <h3>Quick Actions</h3>
+    <div class="quick-actions-grid">
+      @for (action of quickActions(); track action.id) {
+        <button class="quick-action-card" (click)="action.action()" type="button">
+          <div class="action-icon" [style.color]="action.color">{{ action.icon }}</div>
+          <div class="action-content">
+            <div class="action-title">{{ action.title }}</div>
+            <div class="action-description">{{ action.description }}</div>
+          </div>
+          <div class="action-arrow">→</div>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section">
+    <div class="section-header">
+      <div class="header-content">
+        <h2>Browse Categories</h2>
+        <p>Explore our comprehensive collection of tools and resources</p>
+      </div>
+      <div class="view-options">
+        <button 
+          class="view-btn" 
+          [class.active]="categoryView() === 'grid'"
+          (click)="setCategoryView('grid')"
+          type="button">
+          <span class="view-icon">⊞</span>
+          Grid
+        </button>
+        <button 
+          class="view-btn" 
+          [class.active]="categoryView() === 'list'"
+          (click)="setCategoryView('list')"
+          type="button">
+          <span class="view-icon">☰</span>
+          List
+        </button>
+      </div>
+    </div>
+
+    <div class="categories-grid" [class]="categoryView()">
+      @for (category of filteredCategories(); track category.id) {
+        <div 
+          class="category-card" 
+          (click)="exploreCategory(category)"
+          [class.trending]="category.trending"
+          [class.selected]="selectedCategory() === category.id">
+          
+          @if (category.trending) {
+            <div class="trending-badge">
+              <span class="trending-icon">🔥</span>
+              Trending
+            </div>
+          }
+          
+          <div class="category-header">
+            <div class="category-icon" [style.color]="category.color">{{ category.icon }}</div>
+            @if (category.growth) {
+              <div class="growth-indicator positive">
+                +{{ category.growth }}%
+              </div>
+            }
+          </div>
+          
+          <div class="category-content">
+            <h3 class="category-name">{{ category.name }}</h3>
+            <p class="category-description">{{ category.description }}</p>
+          </div>
+          
+          <div class="category-footer">
+            <div class="category-stats">
+              <span class="item-count">
+                <span class="count-number">{{ formatNumber(category.itemCount) }}</span>
+                <span class="count-label">items</span>
+              </span>
+            </div>
+            <div class="category-action">
+              <span class="action-text">Explore</span>
+              <span class="action-arrow">→</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (filteredCategories().length === 0) {
+      <div class="empty-state">
+        <div class="empty-content">
+          <div class="empty-icon">🔍</div>
+          <h3>No categories found</h3>
+          <p>Try adjusting your search terms or browse all categories</p>
         </div>
       </div>
+    }
+  </section>
 
-      <div class="trending-grid">
-        @for (item of filteredTrendingItems(); track item.id; let i = $index) {
-          <div 
-            class="trending-item" 
-            [class]="'rank-' + (i + 1)"
-            (click)="viewTrendingItem(item)">
-            <div class="rank-badge">#{{ i + 1 }}</div>
-            <img [src]="item.image" [alt]="item.title" class="item-image">
-            <div class="item-content">
-              <span class="item-category">{{ item.category }}</span>
-              <h3 class="item-title">{{ item.title }}</h3>
-              <p class="item-description">{{ item.description }}</p>
-              <div class="item-meta">
-                <span class="item-author">by {{ item.author }}</span>
-                <span class="item-date">{{ formatDate(item.publishedDate) }}</span>
-              </div>
-              <div class="item-stats">
-                <span class="views">👁️ {{ formatNumber(item.views) }}</span>
+  <!-- Trending Section -->
+  <section class="trending-section">
+    <div class="section-header">
+      <div class="header-content">
+        <h2>Trending Now</h2>
+        <p>Discover what's popular and gaining momentum</p>
+      </div>
+      <div class="trending-filters">
+        <button 
+          class="filter-btn" 
+          [class.active]="trendingFilter() === 'all'"
+          (click)="setTrendingFilter('all')"
+          type="button">
+          All Time
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="trendingFilter() === 'today'"
+          (click)="setTrendingFilter('today')"
+          type="button">
+          Today
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="trendingFilter() === 'week'"
+          (click)="setTrendingFilter('week')"
+          type="button">
+          This Week
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="trendingFilter() === 'month'"
+          (click)="setTrendingFilter('month')"
+          type="button">
+          This Month
+        </button>
+      </div>
+    </div>
+
+    <div class="trending-grid">
+      @for (item of filteredTrendingItems(); track item.id; let i = $index) {
+        <div 
+          class="trending-item" 
+          (click)="viewTrendingItem(item)">
+          
+          <div class="rank-badge">#{{ i + 1 }}</div>
+          
+          <div class="item-image-container">
+            <img 
+              [src]="item.image" 
+              [alt]="item.title"
+              class="item-image"
+              loading="lazy">
+            <div class="image-overlay">
+              <div class="overlay-stats">
+                <span class="views">👁 {{ formatNumber(item.views) }}</span>
                 <span class="likes">❤️ {{ formatNumber(item.likes) }}</span>
               </div>
             </div>
           </div>
-        }
-      </div>
-    </section>
+          
+          <div class="item-content">
+            <div class="item-category">{{ item.category }}</div>
+            <h4 class="item-title">{{ item.title }}</h4>
+            <p class="item-description">{{ item.description }}</p>
+            
+            <div class="item-tags">
+              @for (tag of item.tags; track tag) {
+                <span class="tag">#{{ tag }}</span>
+              }
+            </div>
+            
+            <div class="item-rating">
+              <div class="stars">
+                @for (star of generateStars(item.rating); track $index) {
+                  <span class="star">{{ star }}</span>
+                }
+              </div>
+              <span class="rating-number">{{ item.rating }}</span>
+            </div>
+            
+            <div class="item-footer">
+              <div class="author-info">
+                <img 
+                  [src]="item.authorAvatar" 
+                  [alt]="item.author"
+                  class="author-avatar">
+                <div class="author-details">
+                  <div class="author-name">{{ item.author }}</div>
+                  <div class="publish-date">{{ formatDate(item.publishedDate) }}</div>
+                </div>
+              </div>
+              
+              @if (item.price !== undefined) {
+                <div class="item-price">
+                  @if (item.price === 0) {
+                    <span class="price free">FREE</span>
+                  } @else {
+                    <span class="price">${{ item.price }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
 
-    <!-- Quick Actions -->
-    <section class="quick-actions">
-      <h2>Quick Actions</h2>
-      <div class="actions-grid">
-        <button class="action-card" (click)="createNew()">
-          <i class="action-icon">➕</i>
-          <h3>Create New</h3>
-          <p>Start something fresh</p>
+    @if (filteredTrendingItems().length === 0) {
+      <div class="empty-state">
+        <div class="empty-content">
+          <div class="empty-icon">📈</div>
+          <h3>No trending items found</h3>
+          <p>Check back later or try a different time filter</p>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Call to Action Section -->
+  <section class="cta-section">
+    <div class="cta-content">
+      <h2>Ready to boost your sales?</h2>
+      <p>Join thousands of businesses already using our platform to drive growth and increase revenue.</p>
+      <div class="cta-actions">
+        <button class="cta-btn primary" (click)="createNew()" type="button">
+          Get Started
         </button>
-        
-        <button class="action-card" (click)="viewAnalytics()">
-          <i class="action-icon">📊</i>
-          <h3>View Analytics</h3>
-          <p>See performance data</p>
-        </button>
-        
-        <button class="action-card" (click)="importData()">
-          <i class="action-icon">📤</i>
-          <h3>Import Data</h3>
-          <p>Bring in external data</p>
-        </button>
-        
-        <button class="action-card" (click)="exportReport()">
-          <i class="action-icon">📋</i>
-          <h3>Export Report</h3>
-          <p>Generate detailed reports</p>
+        <button class="cta-btn secondary" (click)="viewAnalytics()" type="button">
+          View Demo
         </button>
       </div>
-    </section>
-  </div>
+    </div>
+    <div class="cta-visual">
+      <div class="visual-element">📊</div>
+      <div class="visual-element">📈</div>
+      <div class="visual-element">💰</div>
+    </div>
+  </section>
+</div>
